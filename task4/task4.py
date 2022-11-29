@@ -1,69 +1,84 @@
+from io import StringIO
 import csv
 import math
-from io import StringIO
 
-def readString(string_data):
+
+def csvToArray(datafile):
     result = []
-    string_stream = StringIO(string_data)
-    reader = csv.reader(string_stream, delimiter=",")
+    reader = csv.reader(datafile, delimiter=",")
     for row in reader:
         result.append(row)
+
     return result
 
 
-def getNodeList(graph):
+def readCsvString(string_data):
+    string_stream = StringIO(string_data)
+
+    return csvToArray(string_stream)
+
+
+def get_node_list(graph):
     node_map = {}
     for [parent, child] in graph:
         node_map[parent] = True
         node_map[child] = True
+
     return list(node_map.keys())
 
 
-def findChild(node, graph):
+def get_child(node, graph):
     found = []
     for [parent, child] in graph:
         if parent == node:
             found.append(child)
+
     return found
 
 
-def findParent(node, graph):
+def get_parent(node, graph):
     found = []
     for [parent, child] in graph:
         if child == node:
             found.append(parent)
+
     return found
 
-def findAncestor(node, graph):
+
+def get_ancestor(node, graph):
     found = []
-    parents = findParent(node, graph)
+    parents = get_parent(node, graph)
     for parent in parents:
-        grand_parents = findParent(parent, graph)
+        grand_parents = get_parent(parent, graph)
         if (len(grand_parents) > 0):
             found.extend(grand_parents)
-            found.extend(findAncestor(parent, graph))
+            found.extend(get_ancestor(parent, graph))
+
     return found
 
-def findDescendant(node, graph):
+
+def get_descendant(node, graph):
     found = []
-    children = findChild(node, graph)
+    children = get_child(node, graph)
     for child in children:
-        grand_children = findChild(child, graph)
+        grand_children = get_child(child, graph)
         if (len(grand_children) > 0):
             found.extend(grand_children)
-            found.extend(findAncestor(child, graph))
+            found.extend(get_ancestor(child, graph))
+
     return found
 
-def findNeighbours(node, graph):
-    parents = findParent(node, graph)
+def get_neighbours(node, graph):
+    parents = get_parent(node, graph)
     neighbours = []
     for parent in parents:
-        children = findChild(parent, graph)
+        children = get_child(parent, graph)
         children.remove(node)
         neighbours.extend(children)
+
     return neighbours
 
-def findEntropy(graph_stats):
+def get_entropy(graph_stats):
     total_sum = 0
     n = len(graph_stats)
     for [node, stats] in graph_stats:
@@ -74,18 +89,23 @@ def findEntropy(graph_stats):
                 b = math.log(p, 2)
                 in_sum += p * b
         total_sum += in_sum
+
     return -total_sum
 
 def task(str_graph):
-    graph = readString(str_graph)
-    node_list = getNodeList(graph)
-    rez = []
+
+    graph = readCsvString(str_graph)
+    node_list = get_node_list(graph)
+    result = []
+
     for node in node_list:
-        r1 = findChild(node, graph)
-        r2 = findParent(node, graph)
-        r3 = findDescendant(node, graph)
-        r4 = findAncestor(node, graph)
-        r5 = findNeighbours(node, graph)
-        rez.append(["n" + node, [len(r1), len(r2), len(r3), len(r4), len(r5)]])
-    entropy = findEntropy(rez)
+        r1 = get_child(node, graph)
+        r2 = get_parent(node, graph)
+        r3 = get_descendant(node, graph)
+        r4 = get_ancestor(node, graph)
+        r5 = get_neighbours(node, graph)
+        result.append(["n" + node, [len(r1), len(r2), len(r3), len(r4), len(r5)]])
+
+    entropy = get_entropy(result)
+        
     return entropy
